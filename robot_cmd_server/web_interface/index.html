@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+    </head>
+    <body>
+        <h1>Test</h1>
+        <div id="viewer"></div>
+        <form id="teleopcontrols" action="" method="post">
+            <button class='teleop FWD'    name="FWD">FWD</button>
+            <button class='teleop LEFT'   name="LEFT">LEFT</button>
+            <button class='teleop RIGHT'  name="RIGHT">RIGHT</button>
+            <button class='teleop BWD'    name="BWD">BWD</button>
+            <button class='REC'           name="REC">REC</button>
+            <button class='teleop QUIT'   name="QUIT">OFF</button>
+
+            <button class='teleop CAMERA_L'   name="CAMERA_L">PAN LEFT</button>
+            <button class='teleop CAMERA_R'   name="CAMERA_R">PAN RIGHT</button>
+            <button class='teleop CAMERA_U'   name="CAMERA_U">PAN UP</button>
+            <button class='teleop CAMERA_D'   name="CAMERA_D">PAN DOWN</button>
+            <div>
+                <div id="smoke">Hello</div>
+            </div>
+        </form>
+        <script src ="/home/ricky/Code/Python_Battleground/sandbox/working_with_os/sp2023_rover_server/robot_cmd_server/web_interface/Decoder.js"></script>
+        <script src ="/home/ricky/Code/Python_Battleground/sandbox/working_with_os/sp2023_rover_server/robot_cmd_server/web_interface/YUVCanvas.js"></script>
+        <script src ="/home/ricky/Code/Python_Battleground/sandbox/working_with_os/sp2023_rover_server/robot_cmd_server/web_interface/Player.js"></script>
+        <script src ="/home/ricky/Code/Python_Battleground/sandbox/working_with_os/sp2023_rover_server/robot_cmd_server/web_interface/index.js"></script>
+        <script>
+                // Set up Broadway.js for video streaming.
+                window.player = new Player({ useWorker: true, webgl: 'auto', size: { width: 640, height: 480 } });
+                let playerElement = document.getElementById('viewer');
+                playerElement.appendChild(window.player.canvas);
+
+                // Websocket protocol for video streaming.
+                let wsUri = 'ws://172.20.10.6:4040';  // IP and Port on rover used to stream video.
+                let ws = new WebSocket(wsUri);          // Open the ws to the rover.
+                ws.binaryType = 'arraybuffer';          // Set the data type.
+                ws.onopen = function (e) {
+                    console.log('Client connected');
+                    ws.onmessage = function (msg) {
+                    // decode stream
+                        window.player.decode(new Uint8Array(msg.data));
+                    }
+                };
+
+                ws.onclose = function (e) {
+                    console.log('Client disconnected')
+                }
+
+                let chunks = []
+                var media_recorder = null;
+                let REC_ = false;  // Variable used to keep track of recording or not.
+                let rec_ = document.querySelector(".REC")
+                rec_.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (!REC_){
+                        REC_ = true;
+                        media_recorder = new MediaRecorder(window.player.canvas.captureStream(), { mimeType: 'video/webm' });
+                        /*
+                            Per the MediaRecorder documentation: From MediaRecorder.start()
+                            Assuming the MediaRecorder's state is inactive, start() sets the state to recording.
+                            This begins capturing media from the input stream. A blob is created and the data is
+                            collected in it unitl the time slice period elapses or the source media ends.
+                            When a blob fills up or the connection ends, a dataavailable event is sent to the media
+                            recorder with the recorded data. If the source is still playing a new blob is created and
+                            recording continues into that, and so forth.
+                        */
+                        media_recorder.addEventListener('dataavailable', function(e){
+                            if(typeof e.data == 'undefined') return;
+                            if(e.data.size === 0) return;
+                            chunks.push(e.data)
+                        })
+
+                        media_recorder.addEventListener('stop', function(){
+                            const blob = new Blob(chunks, {type: 'video/webm'});
+                            console.log("Downloading video")
+                            let url_ = URL.createObjectURL(blob);
+                            let a = document.createElement('a');
+                            a.href = url_;
+                            a.download = 'mission-video.webm'
+                            document.body.appendChild(a)
+                            a.click()
+                            setTimeout(() => {
+                                document.body.removeChild(a);
+                                URL.revokeObjectURL(url_);
+                            }, 0);
+                        });
+                            media_recorder.start()
+                            console.log("Recording.")
+                        }else{
+                            REC_ = false;
+                            media_recorder.stop()
+                            console.log("Recoding over.")
+                        }
+                });
+        </script>
+    </body>
+</html>
