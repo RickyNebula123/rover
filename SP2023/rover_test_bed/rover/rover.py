@@ -1,4 +1,4 @@
-import camera_main.camera as cam
+import camera.camera as cam
 import config.network_pins as npins
 import config.pins as pins
 import rover.motor as motor
