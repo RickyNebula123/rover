@@ -9,7 +9,7 @@ for(const button of teleop_btns){
         let xhr = new XMLHttpRequest();
         xhr.open("POST", "/", true);
         xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhr.onreadystatechange = () =>{
+        xhr.onreadystatechange = () => {
             if(xhr.readyState === 4 && xhr.status === 200){
                 console.log(xhr.responseText);
             }

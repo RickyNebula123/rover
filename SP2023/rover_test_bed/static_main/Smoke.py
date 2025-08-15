@@ -10,6 +10,7 @@ serialInst.open()
 ServerIp = '172.20.10.7'
 ServerPort = 7777
 url = 'http://' + ServerIp + ':' + str(ServerPort)+ '/sensor'
+
 while True:
     if serialInst.in_waiting:
         packet = serialInst.readline()

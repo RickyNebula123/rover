@@ -1,6 +1,6 @@
 import camera_main.camera as cam
-import rover.motor as motor
 import rover.network_pins as npins
+import rover.motor as motor
 import rover.pins as pins
 import RPi.GPIO as GPIO
 import serial
@@ -36,9 +36,9 @@ class rover:
         self.recording = threading.Event()          # Camera event
 
         self.ip   = npins.ROVER_IP_PIN      # Command server and camera operate out of this IP
-        self.port = npins.ROVER_PORT_PIN  # Port used for cmd server
+        self.port = npins.ROVER_PORT_PIN    # Port used for cmd server
 
-        self.camera = cam.Camera(self.streaming_thread_event, self.ip, npins.ROVER_STREAM_PORT_PIN) # Create camera instance
+        self.camera = cam.Camera(self.streaming_thread_event, self.ip, npins.ROVER_CAMERA_STREAM_PORT_PIN) # Create camera instance
         self.initialize_motors()
 
     def initialize_cmd_server(self):
@@ -284,3 +284,9 @@ class rover:
 robot = rover()
 robot.turn_on()
 
+'''
+Boot sequence:
+    1. Initialize rover object
+    2. run Rover.turn_on()
+        a. Connects to server
+'''

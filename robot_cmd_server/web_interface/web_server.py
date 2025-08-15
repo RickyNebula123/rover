@@ -36,27 +36,27 @@ class Robot_Server_Connection:
             self.init_connection()
             self.server_connection.sendall(data[b'cmd'][0])
 
-class Sensor:
-    def __init__(self):
-        self.smoke = ""
-        self.mono = ""
-        self.door = ""
+# class Sensor:
+#     def __init__(self):
+#         self.smoke = ""
+#         self.mono = ""
+#         self.door = ""
 
-    def set_smoke(self, val):
-        self.smoke = val
+#     def set_smoke(self, val):
+#         self.smoke = val
     
-    def set_mono(self, val):
-        self.mono = val
+#     def set_mono(self, val):
+#         self.mono = val
     
-    def set_door_status(self, val):
-        self.door = val
+#     def set_door_status(self, val):
+#         self.door = val
 
-    def convert_to_string(self):
-        self.smoke = str(self.smoke)
-        self.mono = str(self.mono)
-        self.door = str(self.door)
+#     def convert_to_string(self):
+#         self.smoke = str(self.smoke)
+#         self.mono = str(self.mono)
+#         self.door = str(self.door)
 
-SENSORS = Sensor()
+#SENSORS = Sensor()
 class Handler(BaseHTTPRequestHandler):
     protocol_version = 'HTTP/1.0'
 
@@ -148,6 +148,7 @@ class Handler(BaseHTTPRequestHandler):
                 rover_socket.fwd_to_rover(extracted)
             except:
                 print("Could not forward data to rover.")
+                
         if self.path == '/sensor':
             global SENSORS
             print(f"Sensor data received: {extracted}")
