@@ -1,7 +1,7 @@
 import camera_main.camera as cam
-import rover.network_pins as npins
+import config.network_pins as npins
+import config.pins as pins
 import rover.motor as motor
-import rover.pins as pins
 import RPi.GPIO as GPIO
 import serial
 import socket
@@ -288,5 +288,7 @@ robot.turn_on()
 Boot sequence:
     1. Initialize rover object
     2. run Rover.turn_on()
+        a. rover creates a localized server instance where it receives commands
+        b. rover creates a camera object on the
         a. Connects to server
 '''
