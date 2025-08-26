@@ -1,7 +1,9 @@
 import io
 import time
 import threading
-from picamera import PiCamera
+from picamera2 import Picamera2
+from picamera2.encoders import H264Encoder
+from picamera2.outputs import FileOutput
 from wsgiref.simple_server import make_server
 from ws4py.server.wsgirefserver import WSGIServer, WebSocketWSGIHandler, WebSocketWSGIRequestHandler
 from ws4py.server.wsgiutils import WebSocketWSGIApplication
@@ -26,7 +28,14 @@ class FrameBuffer:      # The main purpose of this class is to help with synchro
 class Camera:
     def __init__(self, thread_e, ip, port):
         self.thread_e = thread_e    # Passed in from rover class, used to manage threads.
-        self.camera   = PiCamera(resolution='640x480', framerate=24)
+        self.camera   = Picamera2()
+        self.config = self.camera.create_video_configuration(
+            main={"size": (640, 480)},
+            controls={"FrameDurationLimits": (41667, 41667)}
+        )
+        self.encoder = H264Encoder(bitrate=10_000_000)
+        self.camera.configure(self.config)
+
         self.preview_ = False
         self.frame_buffer = FrameBuffer()
         self.ip_   = ip
@@ -52,14 +61,14 @@ class Camera:
             self.initialize_stream_server()
             self.streaming = True
             self.websocket_thread.start() # Spins websocket server on a separate thread.
-            self.camera.start_recording(self.frame_buffer, format='h264', profile='baseline')
+            self.camera.start_recording(self.encoder, FileOutput(self.frame_buffer))
             print("Streaming")
             while self.thread_e.is_set():
                 with self.frame_buffer.condition:
                     self.frame_buffer.condition.wait()
                     self.server_WebSocket.manager.broadcast(self.frame_buffer.frame, binary=True)
         except Exception as e:
-            print(f"Stream Error: {e}")
+            print(f"[STREAM ERROR]: {e}")
         finally:
             print("Terminating stream")
             self.streaming = False
