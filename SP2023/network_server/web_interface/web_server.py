@@ -10,7 +10,8 @@ LOOPBACK = "127.0.0.1"
 PORT = 7777
 
 ROBOT_SERVER = LOOPBACK      # IP of our target computer
-ROBOT_PORT   = 5555          # Port of our robot server
+ROBOT_PORT   = 4422          # Port of our robot server
+NETWORK_PATH = "/home/pi/rover/SP2023/network_server/web_interface"
 
 class Robot_Server_Connection:
     def __init__(self, ROBOT_SERVER='', PORT=5555):
@@ -36,27 +37,7 @@ class Robot_Server_Connection:
             self.init_connection()
             self.server_connection.sendall(data[b'cmd'][0])
 
-# class Sensor:
-#     def __init__(self):
-#         self.smoke = ""
-#         self.mono = ""
-#         self.door = ""
 
-#     def set_smoke(self, val):
-#         self.smoke = val
-    
-#     def set_mono(self, val):
-#         self.mono = val
-    
-#     def set_door_status(self, val):
-#         self.door = val
-
-#     def convert_to_string(self):
-#         self.smoke = str(self.smoke)
-#         self.mono = str(self.mono)
-#         self.door = str(self.door)
-
-#SENSORS = Sensor()
 class Handler(BaseHTTPRequestHandler):
     protocol_version = 'HTTP/1.0'
 
@@ -71,8 +52,7 @@ class Handler(BaseHTTPRequestHandler):
             except:
                 file_to_open = "File not found."
                 self.send_response(404)
-
-        if self.path.endswith('.wasm'):
+        elif self.path.endswith('.wasm'):
             with open('avc.wasm', 'rb') as wasm_file:
                 file_contents = wasm_file.read()
                 self.send_response(200)
@@ -80,9 +60,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.end_headers()
 
                 self.wfile.write(bytes(file_contents))
-
-        if self.path == '/Decoder.js':
-            with open('/home/ricky/Code/Python_Battleground/sandbox/working_with_os/sp2023_rover_server/robot_cmd_server/web_interface/Decoder.js','rb') as file:
+        elif self.path == '/Decoder.js':
+            with open(NETWORK_PATH + '/Decoder.js','rb') as file:
                 print(f"opening: {self.path}")
                 file_contents = file.read()
                 self.send_response(200)
@@ -91,8 +70,7 @@ class Handler(BaseHTTPRequestHandler):
 
                 # Send contents
                 self.wfile.write(bytes(file_contents))# Send contents of the JavaScript file
-        
-        if self.path.endswith('.js'):
+        elif self.path.endswith('.js'):
             try:
                 with open(self.path, 'rb') as file:
                     print(f"opening: {self.path}")
@@ -107,21 +85,6 @@ class Handler(BaseHTTPRequestHandler):
                     self.wfile.write(bytes(file_contents))# Send contents of the JavaScript file
             except Exception as e:
                 print(f"Error opening {self.path} file: {e}")
-
-        if self.path == '/sensor':
-            global SENSORS
-
-            root = Element('response')
-            message = Element('message')
-            message.text= SENSORS.smoke + " " + SENSORS.mono
-            root.append(message)
-
-            self.send_response(200)
-            self.send_header("Content-type", "application/xml")
-            self.end_headers()
-
-            xml_response = tostring(root)
-            self.wfile.write(xml_response)
 
         
     def do_POST(self):
@@ -158,7 +121,7 @@ class Handler(BaseHTTPRequestHandler):
             print(f"MONO: {SENSORS.mono} - SMOKE: {SENSORS.smoke} - DOOR: {SENSORS.door}")
 
 
-rover_socket = Robot_Server_Connection(ROBOT_SERVER, ROBOT_PORT)
+rover_socket = Robot_Server_Connection('172.20.10.6', ROBOT_PORT)
 rover_socket.init_connection()
 
 httpd = HTTPServer((HOST, PORT), Handler)

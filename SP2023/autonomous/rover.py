@@ -35,7 +35,7 @@ class rover:
         self.recording = threading.Event()             # Looks to not be in use at the moment
 
         # Rover network
-        self.ip   = npins.ROVER_IP_PIN      # Command server and camera operate out of this IP
+        self.ip   = npins.ROVER_PHONE_IP_PIN      # Command server and camera operate out of this IP
         self.port = npins.ROVER_PORT_PIN    # Port used for cmd server
         self.camera_port = npins.ROVER_CAMERA_STREAM_PORT_PIN # Port used for camera stream
 
@@ -102,7 +102,7 @@ class rover:
 
 
     def handle_CMD(self, cmd_ctr):
-        Arduino = serial.Serial("/dev/ttyACM0",9600,timeout=1) 
+        #Arduino = serial.Serial("/dev/ttyACM0",9600,timeout=1) 
         while True:
             data = cmd_ctr.recv(16)
             print(f"CMD received: {data}")
